@@ -1,0 +1,51 @@
+#import sly from lexer
+
+# Integer FSM makes sure the token is in fact an integer
+def num_FSM(line):  #goes till the end of the line and remembers the number
+    num = ""
+    for i in line:
+        if not i.isdigit():
+            break
+    return 'num', int(num), len(num)
+
+# String FSM makes sure variable names and key words are valid
+def str_FSM(line):
+    #re.delimiter = line[0]
+    string = ""
+    for i in line:
+        string += i
+    return 'str', string, len(string)
+
+
+def id_FSM(line):
+    keys = ['print', 'var', 'while', 'if', 'elif', 'else']
+    id = ""
+    for i in line:
+        if not i.isdigit() and not i.isalpha and i != "_":
+            break
+        id += i
+    if id in keys:
+        return 'key', id, len(id)
+    else:
+        return 'ID', id, len(id)
+
+
+def lex(line):
+    lexeme_count = 0
+    while lexeme_count < len(line):
+        lexeme = line[lexeme_count]
+        if lexeme.isdigit():
+            typ, tok, consumed = num_FSM(
+                line[lexeme_count:]
+            )  #making a variable for each token, one for the token itself and one for the amount of lexemes 'consumed', 'eaten', or 'scanned'; Then we are assigning those variables to a function call which will take the rest of the current line and gets the rest of the token; after that, we change lexeme_count by the amound of characters consumed
+            lexeme_count += consumed
+        elif lexeme == '"' or lexeme == "'":
+            typ, tok, consumed = str_FSM(line[lexeme_count:])
+            lexeme_count += consumed
+        elif lexeme.isalpha():
+            typ, tok, consumed = id_FSM(line[lexeme_count:])
+            lexeme_count += consumed
+        else:
+            lexeme_count += 1
+# code = input()
+# lex(code)

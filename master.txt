@@ -1,0 +1,262 @@
+
+keyword_list = ["int", "float", "bool", "if", "else", "then", "endif", "while", "whileend", "do", "doend", "for", "forend", "input", "output", "and", "or", "function"]
+operator_list = ["=", "+", "-", "*", "/", "%","<", ">", "<=", ">=", "==", "++", "--", "!="]
+seperator_list = [";", ":", ",", "(", ")", "{", "}", "[", "]","'","."]
+
+
+
+#               keyword     operator      separator
+#digit
+#real
+#identifier
+
+#Digit State Transistions
+def digit_StartTransistions(inputString):
+    splitInputString = inputString.split(None,1)
+    inputChar, inputString = splitInputString if len(splitInputString) > 1 else (inputString,"")
+    #If first char is a digit, go to integer state
+    if(inputChar.isdigit()):
+        newState = "digit_integerState"
+    #If first char is a digit, go to real/float state
+    elif(inputChar == "."):
+        newState = "digit_realState"
+    #Else first char is not a digit or a '.', therefore go to error state
+    else:
+        newState = "digit_errorState"
+    return(newState, inputString)
+
+def digit_integerStateTransistions(inputString):
+    splitInputString = inputString.split(None,1)
+    inputChar, inputString = splitInputString if len(splitInputString) > 1 else (inputString,"")
+    #If currently an integer and char is a '~', go to end integer state
+    if(inputChar == "~"):
+        newState = "INTEGER"
+    #If currently an integer and char is a digit, stay classified as an integer
+    elif(inputChar.isdigit()):
+        newState = "digit_integerState"
+    #If currently an integer and char is a '.', go to real/float state
+    elif(inputChar == "."):
+        newState = "digit_realState"
+    #Else char is not a digit or a '.', therefore go to error state
+    else:
+        newState = "digit_errorState"
+    return(newState, inputString)
+
+def digit_realStateTransistions(inputString):
+    splitInputString = inputString.split(None,1)
+    inputChar, inputString = splitInputString if len(splitInputString) > 1 else (inputString,"")
+    #If currently an real/float and char is a '~', go to end real/float state
+    if(inputChar == "~"):
+        newState = "REAL"
+    #If currently a real/float and char is a digit, stay classified as a real/float
+    elif(inputChar.isdigit()):
+        newState = "digit_realState"
+    #Else (char is not a digit) go to error state
+    else:
+        newState = "digit_errorState"
+    return(newState, inputString)
+
+class FiniteStateMachine:
+    def __init__(self):
+        self.handlers = {}
+        self.startState = None
+        self.endStates = []
+
+    def add_state(self, name, handler, end_state=0):
+        name = name.upper()
+        self.handlers[name] = handler
+        if end_state:
+            self.endStates.append(name)
+
+    def set_start(self, name):
+        self.startState = name.upper()
+
+    def run(self, cargo):
+        try:
+            handler = self.handlers[self.startState]
+        except:
+            print("Must call .set_start() before .run()")
+        if not self.endStates:
+            print("At least one state must be an end_state")
+    
+        while True:
+            (newState, cargo) = handler(cargo)
+            if newState.upper() in self.endStates:
+                return(newState) 
+            else:
+                handler = self.handlers[newState.upper()] 
+
+#Identifier State Transitions
+def ident_StartTransistions(inputString):
+    splitInputString = inputString.split(None,1)
+    inputChar, inputString = splitInputString if len(splitInputString) > 1 else (inputString,"")
+    #If first char is an alphabetic go to first state
+    if(inputChar.isalpha()):
+        newState = "ident_firstState"
+    #If first char is an 'underscore' go to first state
+    elif(inputChar == "_"):
+        newState = "ident_firstState"
+    #Else first char is not an alphabetic or a '_', therefore go to error state
+    else:
+        newState = "ident_errorState"
+    return(newState, inputString)
+
+def ident_FirstStateTransistions(inputString):
+    splitInputString = inputString.split(None,1)
+    inputChar, inputString = splitInputString if len(splitInputString) > 1 else (inputString,"")
+    #If char is a '~', go to end idenitifer state
+    if(inputChar == "~"):
+        newState = "IDENTIFIER"
+    #If char is an alphabetic go to valid identiifer state
+    elif(inputChar.isalpha()):
+        newState = "ident_ValidIdentifierState"
+        #If char is a digit go to valid identiifer state
+    elif(inputChar.isdigit()):
+        newState = "ident_ValidIdentifierState"
+    #If char is an 'underscore'(_) go to valid identiifer state
+    elif(inputChar == "_"):
+        newState = "ident_ValidIdentifierState"
+    #If char is an 'dollar sign'($) go to valid identiifer state
+    elif(inputChar == "$"):
+        newState = "ident_ValidIdentifierState"
+    #Else char is not an alphabetic, digit, '_', or '$', therefore go to error state
+    else:
+        newState = "ident_errorState"
+    return(newState, inputString)
+
+def ident_ValidIdentifierStateTransistions(inputString):
+    splitInputString = inputString.split(None,1)
+    inputChar, inputString = splitInputString if len(splitInputString) > 1 else (inputString,"")
+    #If char is a '~', go to end idenitifer state
+    if(inputChar == "~"):
+        newState = "IDENTIFIER"
+    #If char is an alphabetic go to valid identiifer state
+    elif(inputChar.isalpha()):
+        newState = "ident_ValidIdentifierState"
+        #If char is a digit go to valid identiifer state
+    elif(inputChar.isdigit()):
+        newState = "ident_ValidIdentifierState"
+    #If char is an 'underscore'(_) go to valid identiifer state
+    elif(inputChar == "_"):
+        newState = "ident_ValidIdentifierState"
+    #If char is an 'dollar sign'($) go to valid identiifer state
+    elif(inputChar == "$"):
+        newState = "ident_ValidIdentifierState"
+    #Else char is not an alphabetic, digit, '_', or '$', therefore go to error state
+    else:
+        newState = "ident_errorState"
+    return(newState, inputString)
+
+#The split operators function deals with any cases such as "a+b-c" and splits it into "a + b - c" for the other functions to recieve correct format
+def insertSpace(inputLine):
+
+    #split keywords
+    for elm in keyword_list:
+        tempTuple = inputLine.partition(elm)
+        inputLine = " ".join(tempTuple)
+
+    #Add whitespace char at end of string in case last element in a operator
+    leftToParseString = inputLine + ' '     #String that has not yet parsed
+    parsedString = ''                       #String that is already parsed
+    while(len(leftToParseString) != 0):
+        #If first two elements of string left ot parse is a 2 char operator
+        if(leftToParseString[:2] == "++" or leftToParseString[:2] == "--"
+            or leftToParseString[:2] == "<=" or leftToParseString[:2] == ">="
+            or leftToParseString[:2] == "==" or leftToParseString[:2] == "!="):
+            parsedString = parsedString + ' ' + leftToParseString[:2] + ' '
+            tempString = leftToParseString[2:]
+            leftToParseString = tempString
+        #If next char in string is an operator/seperator
+        elif(leftToParseString[0] == "!" or leftToParseString[0] == "="
+        or leftToParseString[0] == "+" or leftToParseString[0] == "-"
+        or leftToParseString[0] == "*" or leftToParseString[0] == "/"
+        or leftToParseString[0] == "<" or leftToParseString[0] == ">"
+        or leftToParseString[0] == "(" or leftToParseString[0] == ")"
+        or leftToParseString[0] == "{" or leftToParseString[0] == "}"
+        or leftToParseString[0] == "[" or leftToParseString[0] == "]"
+        or leftToParseString[0] == ":" or leftToParseString[0] == ";"
+        or leftToParseString[0] == ","):
+            parsedString = parsedString + ' ' + leftToParseString[0] + ' '
+            tempString = leftToParseString[1:]
+            leftToParseString = tempString
+        #Else shift next string
+        else:        
+            parsedString = parsedString + leftToParseString[0]
+            leftToParseString = leftToParseString[1:]
+    print (parsedString)
+    return parsedString
+
+def lexur(lexeme):
+    #Check if keyword:
+    if any(item == lexeme for item in keyword_list):
+        return(lexeme, "KEYWORD")
+
+    else:
+        #split along list of operator/seperator and run function with the new list of strings
+        for splitLex in lexeme.split():
+            #Check if operator:
+            if any(item == splitLex for item in operator_list):
+                return(splitLex, "OPERATOR")
+
+            #Check if seperator:
+            elif any(item == splitLex for item in seperator_list):
+                return(splitLex, "SEPERATOR")
+                
+            #Check for idenitifier/digit
+            else:
+                tempLexeme = splitLex
+                splitLex = splitLex + '~'
+                splitLex = " ".join(splitLex)
+                if(splitLex[0].isdigit() or splitLex[0] == "."):
+                    return(tempLexeme, digitMachine.run(splitLex))
+                elif(splitLex[0].isalpha() or splitLex[0] == "_"):
+                    return(tempLexeme, identMachine.run(splitLex))
+                else:
+                    return(tempLexeme, "UNKNOWN")
+
+#DRIVER FUNCTIONS AKA MAIN
+#Read input.txt to perform lexical analysis
+if __name__ == "__main__":
+
+    #Add Digit Finite State Machine States
+    digitMachine = FiniteStateMachine()
+    digitMachine.add_state("digit_Start", digit_StartTransistions)
+    digitMachine.add_state("digit_integerState", digit_integerStateTransistions)
+    digitMachine.add_state("digit_realState", digit_realStateTransistions)
+    digitMachine.add_state("digit_errorState", None, end_state=1)
+    digitMachine.add_state("INTEGER", None, end_state=1)
+    digitMachine.add_state("REAL", None, end_state=1)
+    digitMachine.set_start("digit_Start")
+
+    #Add Identifier Finite State Machine States
+    identMachine = FiniteStateMachine()
+    identMachine.add_state("ident_State", ident_StartTransistions)
+    identMachine.add_state("ident_firstState", ident_FirstStateTransistions)
+    identMachine.add_state("ident_ValidIdentifierState", ident_ValidIdentifierStateTransistions)
+    identMachine.add_state("ident_errorState", None, end_state=1)
+    identMachine.add_state("IDENTIFIER", None, end_state=1)
+    identMachine.set_start("ident_State")
+
+    #Print display header/categories
+    print('{0:<15} {1:<10} {2:<30}'.format("TOKENS","","LEXEMES"))
+    print()
+
+    with open("source.txt", "r") as inputFile:
+        for line in inputFile:
+            #If line is empty pass
+            if(not line.strip()):
+                pass
+            #If the line begins with a ! or a comment symbol, skip line and do not compile
+            elif((line.lstrip())[0] == '!'):
+                pass
+            #Else run each lexeme through the lexur
+            else:
+                ##insert this
+                lexeme = insertSpace(line)
+                lexeme.strip()
+                multipleLex = lexeme.split()
+                print(multipleLex)
+
+                for lexeme in multipleLex:
+                    tempList = lexur(lexeme)
+                    print('{0:<15} {1:<10} {2:<30}'.format(tempList[1],"=",tempList[0]))
